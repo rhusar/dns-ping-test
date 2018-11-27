@@ -1,0 +1,45 @@
+apiVersion: v1
+items:
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+    labels:
+      run: dns-ping
+    name: dns-ping
+  spec:
+    replicas: 5
+    template:
+      metadata:
+        labels:
+          run: dns-ping
+          deploymentConfig: dns-ping
+      spec:
+        containers:
+        - image: rhusar/dns-test
+          env:
+            - name: DNS_QUERY
+              value: dns-ping.myproject
+          name: dns-ping
+kind: List
+metadata: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  name: dns-ping
+  labels:
+    run: dns-ping
+spec:
+  publishNotReadyAddresses: true
+  clusterIP: None
+  ports:
+    - name: ping
+      port: 8888
+      protocol: TCP
+      targetPort: 8888
+  selector:
+     deploymentConfig: dns-ping
+---
